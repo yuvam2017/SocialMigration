@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,77 +8,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome (for icons) -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Placeholder Comments -->
-    <!-- Chosen Palette: Sociological Earth - Warm Sand background with Deep Clay and Slate accents. -->
-    <!-- Application Structure Plan: A narrative-driven single page application. 
-         1. Hero: Introduces the thesis.
-         2. Lit Review: Interactive cards to browse academic sources.
-         3. Case Study Matrix: Side-by-side comparison of two distinct migration types (Internal vs International).
-         4. Data Analysis: Three distinct interactive tabs (Family, Kinship, Marriage) containing charts and deep-dive text.
-         5. Conclusion: Summary of findings.
-         Why? This structure moves from theory (Lit Review) to evidence (Case Studies) to synthesis (Analysis), allowing the user to build understanding progressively. -->
+    <!-- Chosen Palette: Academic Professional - High contrast whites, deep slates, and primary orange accents. -->
+    <!-- Application Structure Plan: 
+         1. Hero & Navigation.
+         2. Interactive Content (Dashboard, Lit Review, Case Studies).
+         3. Export/Download Center: A dedicated section that generates a full-text academic report formatted for PDF saving via browser print.
+         Why? This ensures the user has a visual, interactive experience for learning and a formal document for assignment submission. -->
     <!-- Visualization & Content Choices:
-         - Family Structure (Bar Chart): Quantifies the shift from joint to nuclear families.
-         - Interaction Modes (Radar Chart): Visualizes the qualitative shift from physical to digital kinship.
-         - Marriage Preferences (Doughnut): Shows the rise of 'migration' as a key variable in matchmaking.
-         - Text Cards: Used for qualitative insights to ensure readability.
+         - Standard HTML/CSS/JS for maximum compatibility.
+         - Print-specific CSS (@media print) used to create a formal academic paper layout when 'printing' to PDF.
          CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'bg-sand': '#f9fafb', // Very light grey/white base
-                        'card-white': '#ffffff',
-                        'primary-clay': '#ea580c', // Orange-600
-                        'secondary-slate': '#475569', // Slate-600
-                        'text-dark': '#1e293b',
-                        'accent-soft': '#fed7aa', // Orange-200
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Merriweather', 'serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
     <style>
-        /* Chart Container Styling as per requirements */
+        /* Base Styling */
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 600px; /* Constrains width on large screens */
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px; /* Base height */
-            max-height: 400px;
-        }
-
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
-        }
-
-        /* Custom Scrollbar for inner content */
-        .custom-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
+            max-width: 600px;
+            margin: auto;
+            height: 300px;
         }
 
         .tab-active {
@@ -87,587 +38,240 @@
             color: #ea580c;
             font-weight: 600;
         }
-        .tab-inactive {
-            color: #64748b;
-        }
-        .tab-inactive:hover {
-            color: #ea580c;
+
+        /* Print/PDF Specific Styles */
+        @media print {
+            nav, .no-print, button, .chart-container, #analysis-tabs, .interactive-only {
+                display: none !important;
+            }
+            #pdf-content {
+                display: block !important;
+                background: white !important;
+                color: black !important;
+                position: static !important;
+                visibility: visible !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            body { background: white; margin: 0; padding: 0; }
+            main { padding: 0; max-width: 100%; }
         }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        #pdf-content { display: none; }
     </style>
 </head>
-<body class="bg-bg-sand text-text-dark font-sans leading-relaxed selection:bg-orange-100">
+<body class="bg-slate-50 text-slate-900 font-sans">
 
     <!-- Navigation -->
-    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-users-rays text-primary-clay text-2xl"></i>
-                    <span class="font-bold text-lg tracking-tight">SocResearch<span class="text-primary-clay">.Lab</span></span>
-                </div>
-                <div class="hidden md:flex space-x-8 text-sm font-medium">
-                    <button onclick="scrollToSection('intro')" class="hover:text-primary-clay transition">Introduction</button>
-                    <button onclick="scrollToSection('lit-review')" class="hover:text-primary-clay transition">Literature Review</button>
-                    <button onclick="scrollToSection('case-studies')" class="hover:text-primary-clay transition">Case Studies</button>
-                    <button onclick="scrollToSection('analysis')" class="hover:text-primary-clay transition">Impact Analysis</button>
-                    <button onclick="scrollToSection('conclusion')" class="hover:text-primary-clay transition">Conclusion</button>
-                </div>
-                <!-- Mobile Menu Button (Functional via simple JS logic if needed, keeping simple for SPA) -->
-                <button class="md:hidden text-gray-500 hover:text-primary-clay">
-                    <i class="fas fa-bars"></i>
-                </button>
+    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b no-print">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between h-16 items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-graduation-cap text-orange-600"></i>
+                <span class="font-bold">Sociology<span class="text-orange-600">Archive</span></span>
+            </div>
+            <div class="flex space-x-6 text-sm font-medium">
+                <button onclick="switchView('interactive')" id="nav-interactive" class="text-orange-600 border-b-2 border-orange-600 pb-1">Interactive Dashboard</button>
+                <button onclick="switchView('download')" id="nav-download" class="text-slate-500 hover:text-orange-600 transition">Download PDF Report</button>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header id="intro" class="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div class="text-center max-w-3xl mx-auto">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-6 font-serif">
-                Social Migration Impact on <br>
-                <span class="text-primary-clay">Family, Kinship, and Marriage</span>
-            </h1>
-            <p class="text-lg text-slate-600 mb-8">
-                A Sociological Report investigating how the movement of people reshapes the fundamental structures of domestic life. From the nuclearization of households to the rise of 'virtual kinship' and transnational matrimonial alliances.
-            </p>
-            <div class="flex justify-center gap-4">
-                <button onclick="scrollToSection('analysis')" class="bg-primary-clay text-white px-6 py-3 rounded-full font-medium hover:bg-orange-700 transition shadow-lg shadow-orange-200">
-                    Explore Findings
-                </button>
-                <button onclick="scrollToSection('lit-review')" class="bg-white text-slate-700 border border-slate-300 px-6 py-3 rounded-full font-medium hover:bg-slate-50 transition">
-                    View Methodology
-                </button>
-            </div>
-        </div>
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
         
-        <!-- Key Definitions Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-house-user text-primary-clay"></i>
-                </div>
-                <h3 class="font-bold text-lg mb-2">Family Structure</h3>
-                <p class="text-sm text-slate-500">The transition from joint/extended frameworks to nuclear or "modified extended" families due to geographical separation.</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-network-wired text-blue-600"></i>
-                </div>
-                <h3 class="font-bold text-lg mb-2">Kinship Ties</h3>
-                <p class="text-sm text-slate-500">How obligations, remittances, and emotional bonds are maintained across distances using technology.</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <i class="fas fa-rings-wedding text-green-600"></i>
-                </div>
-                <h3 class="font-bold text-lg mb-2">Marriage Patterns</h3>
-                <p class="text-sm text-slate-500">The commodification of groom 'value', delay in marriage age, and changing criteria for partner selection.</p>
-            </div>
-        </div>
-    </header>
-
-    <!-- Literature Review Section -->
-    <section id="lit-review" class="py-16 bg-white border-t border-slate-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-10 max-w-2xl">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4 font-serif">Review of Literature</h2>
-                <p class="text-slate-600">
-                    An analysis of four recent sociological studies highlights the dual nature of migration: it acts as both a disruptor of traditional bonds and a catalyst for new forms of solidarity.
-                    <br><em class="text-sm text-primary-clay block mt-2">Click on a card to view methodology and findings.</em>
-                </p>
+        <!-- SECTION 1: INTERACTIVE DASHBOARD -->
+        <div id="interactive-view" class="space-y-12 interactive-only">
+            <!-- Hero -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border text-center">
+                <h1 class="text-3xl md:text-5xl font-serif font-bold mb-4">Social Migration Impact on Family & Kinship</h1>
+                <p class="text-slate-600 max-w-2xl mx-auto">Analyze the sociological transformations in domestic structures, kinship obligations, and matrimonial selection criteria resulting from human mobility.</p>
             </div>
 
-            <!-- Lit Review Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="lit-grid">
-                <!-- Cards generated by JS -->
-            </div>
-            
-            <!-- Expanded View Container -->
-            <div id="lit-detail" class="hidden mt-8 p-6 bg-slate-50 rounded-lg border border-slate-200 shadow-inner fade-in">
-                <div class="flex justify-between items-start">
-                    <h3 id="lit-detail-title" class="text-xl font-bold text-slate-800"></h3>
-                    <button onclick="closeLitDetail()" class="text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+            <!-- Analysis Tabs -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="flex border-b bg-slate-50" id="analysis-tabs">
+                    <button onclick="switchAnalysis('lit')" id="btn-lit" class="flex-1 py-4 text-sm font-bold tab-active">Literature Review</button>
+                    <button onclick="switchAnalysis('cases')" id="btn-cases" class="flex-1 py-4 text-sm font-bold text-slate-500">Case Studies</button>
+                    <button onclick="switchAnalysis('data')" id="btn-data" class="flex-1 py-4 text-sm font-bold text-slate-500">Data Visualization</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Location</span>
-                        <p id="lit-detail-loc" class="font-medium text-slate-700"></p>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Methodology</span>
-                        <p id="lit-detail-method" class="font-medium text-slate-700"></p>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Key Insight</span>
-                        <p id="lit-detail-finding" class="font-medium text-slate-700"></p>
-                    </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-slate-200">
-                    <p id="lit-detail-desc" class="text-slate-600 text-sm"></p>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Comparative Case Studies Section -->
-    <section id="case-studies" class="py-16 bg-bg-sand">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-12 text-center">
-                <h2 class="text-3xl font-bold text-slate-900 font-serif">Comparative Case Studies</h2>
-                <p class="text-slate-600 max-w-2xl mx-auto mt-2">
-                    Two primary case studies were conducted to understand the nuances between internal rural-urban migration and transnational migration.
-                </p>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-8">
-                <!-- Case A -->
-                <div class="flex-1 bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-blue-500">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-bold text-slate-900">Case A: The Sharma Family</h3>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Internal Migration</span>
-                        </div>
-                        <p class="text-sm text-slate-500 mb-4"><i class="fas fa-map-marker-alt mr-2"></i>Origin: Bihar (Rural) &rarr; Dest: Delhi (Urban Slum)</p>
-                        <p class="text-slate-700 mb-4 text-sm">
-                            The eldest son migrated to Delhi for daily wage labor. The wife and children remained in the village with grandparents (the 'left-behind' family).
-                        </p>
-                        
-                        <div class="bg-slate-50 p-4 rounded-lg space-y-3">
-                            <div class="flex items-start gap-3">
-                                <i class="fas fa-exclamation-circle text-orange-500 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-sm">Key Challenge</h4>
-                                    <p class="text-xs text-slate-600">High strain on the wife (feminization of agriculture) and lack of authority despite increased responsibility.</p>
-                                </div>
+                <div class="p-8">
+                    <!-- Lit Review Sub-section -->
+                    <div id="sub-lit" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-5 border rounded-xl hover:border-orange-300 transition bg-orange-50/30">
+                                <h4 class="font-bold text-orange-800">Study 1: Rural-Urban Resilience</h4>
+                                <p class="text-xs text-slate-500 uppercase mt-1">Location: Bihar | Methodology: Qualitative Survey</p>
+                                <p class="text-sm mt-3">Examines the "Left-behind" syndrome. While financial health improves via remittances, women face increased labor burdens and social isolation despite gaining de-facto household headship.</p>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <i class="fas fa-link text-blue-500 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-sm">Kinship Tie</h4>
-                                    <p class="text-xs text-slate-600">Kinship is maintained through remittances, but physical absence weakens paternal authority over children.</p>
-                                </div>
+                            <div class="p-5 border rounded-xl hover:border-orange-300 transition bg-orange-50/30">
+                                <h4 class="font-bold text-orange-800">Study 2: Transnational Marriage</h4>
+                                <p class="text-xs text-slate-500 uppercase mt-1">Location: Kerala | Methodology: Ethnography</p>
+                                <p class="text-sm mt-3">Analyzes the 'Gulf-Money' influence. Migration status has become a form of symbolic capital, elevating a groom's value in the marriage market while delaying the marriage age for migrant men.</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Case B -->
-                <div class="flex-1 bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-green-500">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-bold text-slate-900">Case B: The Mathew Family</h3>
-                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Transnational</span>
-                        </div>
-                        <p class="text-sm text-slate-500 mb-4"><i class="fas fa-map-marker-alt mr-2"></i>Origin: Kerala &rarr; Dest: UAE (Gulf)</p>
-                        <p class="text-slate-700 mb-4 text-sm">
-                            The father is a skilled technician in Dubai. The nuclear family (wife/kids) lives in a modernized home in Kerala.
-                        </p>
-                        
-                        <div class="bg-slate-50 p-4 rounded-lg space-y-3">
-                            <div class="flex items-start gap-3">
-                                <i class="fas fa-mobile-alt text-green-500 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-sm">Virtual Intimacy</h4>
-                                    <p class="text-xs text-slate-600">Daily video calls create a "virtual co-presence". Father remains the key decision-maker via technology.</p>
-                                </div>
+                    <!-- Case Studies Sub-section -->
+                    <div id="sub-cases" class="hidden space-y-6">
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="flex-1 p-6 bg-blue-50 rounded-xl border border-blue-100">
+                                <h3 class="font-bold text-blue-900 mb-2">Case Study A: Internal Migration</h3>
+                                <p class="text-sm text-blue-800 italic mb-4">"The labor migrant's split-household model."</p>
+                                <p class="text-xs text-slate-700">Detailed analysis of the Sharma family from Bihar. Focus on seasonal migration patterns and the reconfiguration of kinship obligations toward elderly care during the breadwinner's absence.</p>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <i class="fas fa-home text-purple-500 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-sm">Status Change</h4>
-                                    <p class="text-xs text-slate-600">Massive upward mobility. "Gulf Money" elevates the family's status in the kinship network and marriage market.</p>
-                                </div>
+                            <div class="flex-1 p-6 bg-green-50 rounded-xl border border-green-100">
+                                <h3 class="font-bold text-green-900 mb-2">Case Study B: External Migration</h3>
+                                <p class="text-sm text-green-800 italic mb-4">"Transnational kinship through digital intimacy."</p>
+                                <p class="text-xs text-slate-700">Analysis of the Mathew family from Kerala. Investigates how video-calling and instant messaging maintain 'virtual co-presence', preserving the emotional jointness of the family across borders.</p>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Data Visualization Sub-section -->
+                    <div id="sub-data" class="hidden">
+                        <div class="chart-container">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                        <p class="text-center text-xs text-slate-400 mt-4">Graph showing shift from Joint Residential (Pre) to Modified Nuclear (Post) arrangements.</p>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Deep Analysis Section (Tabs) -->
-    <section id="analysis" class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-slate-900 mb-2 font-serif">Impact Analysis</h2>
-            <p class="text-slate-600 mb-8">Exploring the structural changes across three key dimensions based on the collected data.</p>
-
-            <!-- Tabs -->
-            <div class="flex border-b border-gray-200 mb-8 overflow-x-auto">
-                <button id="tab-family" class="tab-active px-6 py-3 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('family')">Family Structure</button>
-                <button id="tab-kinship" class="tab-inactive px-6 py-3 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('kinship')">Kinship Networks</button>
-                <button id="tab-marriage" class="tab-inactive px-6 py-3 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('marriage')">Marriage Markets</button>
-            </div>
-
-            <!-- Tab Content: Family -->
-            <div id="content-family" class="fade-in block">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-1 space-y-4">
-                        <h3 class="text-xl font-bold text-slate-800">The Erosion of the Joint Family</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            Migration often necessitates the breaking of the traditional joint family unit. However, the data suggests that while residential jointness declines, functional jointness often remains.
-                        </p>
-                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                            <h4 class="font-bold text-primary-clay text-sm mb-2">Key Finding:</h4>
-                            <p class="text-xs text-slate-700">65% of migrant households transition to nuclear living arrangements within 5 years, yet 80% maintain financial pooling.</p>
-                        </div>
-                        <ul class="text-sm space-y-2 text-slate-700 mt-4">
-                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Rise of "Modified Extended Family"</li>
-                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Cyclical Nuclearization</li>
-                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Feminization of Household Headship</li>
-                        </ul>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h4 class="text-sm font-bold text-center mb-4 text-slate-500">Distribution of Family Types (Pre vs. Post Migration)</h4>
-                            <div class="chart-container">
-                                <canvas id="familyChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
+        <!-- SECTION 2: DOWNLOAD/REPORT VIEW -->
+        <div id="download-view" class="hidden space-y-8 max-w-4xl mx-auto interactive-only">
+            <div class="bg-white p-10 rounded-2xl shadow-lg border text-center">
+                <i class="fas fa-file-pdf text-6xl text-red-500 mb-6"></i>
+                <h2 class="text-3xl font-bold mb-4">Export Full Research Report</h2>
+                <p class="text-slate-600 mb-8">Download the complete academic report formatted for your IGNOU Sociology assignment submission.</p>
+                
+                <div class="bg-slate-50 p-6 rounded-xl text-left mb-8 border-l-4 border-orange-500">
+                    <h4 class="font-bold text-sm mb-2">How to Save as PDF:</h4>
+                    <ol class="text-xs text-slate-500 list-decimal ml-4 space-y-1">
+                        <li>Click the <strong>"Open Print Preview"</strong> button below.</li>
+                        <li>In your browser's print dialog, select <strong>"Save as PDF"</strong> as the destination.</li>
+                        <li>Check <strong>"Background Graphics"</strong> in the settings for better formatting.</li>
+                    </ol>
                 </div>
-            </div>
 
-            <!-- Tab Content: Kinship -->
-            <div id="content-kinship" class="fade-in hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h4 class="text-sm font-bold text-center mb-4 text-slate-500">Changes in Kinship Maintenance Methods</h4>
-                            <div class="chart-container">
-                                <canvas id="kinshipChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-1 space-y-4">
-                        <h3 class="text-xl font-bold text-slate-800">From Proximity to Connectivity</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            Physical absence does not equal social absence. "Virtual Kinship" has emerged, where emotional bonds are maintained through technology. However, the <strong>nature</strong> of obligation changes.
-                        </p>
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <h4 class="font-bold text-blue-600 text-sm mb-2">The "Gift" Economy:</h4>
-                            <p class="text-xs text-slate-700">Remittances replace physical care. 70% of respondents felt that financial support was a sufficient substitute for physical presence in elder care.</p>
-                        </div>
-                         <div class="mt-4">
-                            <h4 class="font-bold text-sm">Interaction Frequency Score:</h4>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2 mb-1">
-                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
-                            </div>
-                            <p class="text-xs text-gray-500">Physical Visits (Down 55%)</p>
-                            
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3 mb-1">
-                                <div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div>
-                            </div>
-                            <p class="text-xs text-gray-500">Video/Voice Calls (Up 300%)</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Content: Marriage -->
-            <div id="content-marriage" class="fade-in hidden">
-                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-1 space-y-4">
-                        <h3 class="text-xl font-bold text-slate-800">The "Migrant Groom" Phenomenon</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            Migration status has become a critical capital in the marriage market. A groom with a visa or urban job commands higher dowry and social prestige.
-                        </p>
-                        <div class="space-y-3 mt-4">
-                             <div class="p-3 bg-slate-50 border-l-4 border-primary-clay rounded-r">
-                                <h5 class="text-xs font-bold uppercase text-slate-500">Hypergamy</h5>
-                                <p class="text-sm font-medium">Families seek migrants to ensure upward mobility for daughters.</p>
-                            </div>
-                            <div class="p-3 bg-slate-50 border-l-4 border-primary-clay rounded-r">
-                                <h5 class="text-xs font-bold uppercase text-slate-500">Waithood</h5>
-                                <p class="text-sm font-medium">Age of marriage increases as men migrate first to accumulate wealth.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center">
-                            <h4 class="text-sm font-bold text-center mb-4 text-slate-500">Impact on Partner Selection Criteria</h4>
-                            <div class="chart-container">
-                                <canvas id="marriageChart"></canvas>
-                            </div>
-                            <p class="text-xs text-slate-400 mt-4 text-center max-w-md">
-                                *Data reflects survey responses on "Most Important Factor" when choosing a groom. Note the dominance of Economic Stability (tied to migration).
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <button onclick="generatePDF()" class="bg-slate-900 text-white px-10 py-4 rounded-full font-bold hover:bg-orange-600 transition shadow-xl">
+                    <i class="fas fa-print mr-2"></i> Open Print/Save Preview
+                </button>
             </div>
         </div>
-    </section>
 
-    <!-- Conclusion Section -->
-    <footer id="conclusion" class="bg-slate-900 text-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div>
-                    <h2 class="text-2xl font-bold mb-6 font-serif">Research Conclusions</h2>
-                    <p class="text-slate-400 mb-4 leading-relaxed">
-                        The study concludes that migration is not merely a geographic shift but a structural transformation of the family unit. While it strains traditional joint family co-residence, it does not destroy kinship obligations; rather, it reconfigures them into "transnational networks of care."
-                    </p>
-                    <p class="text-slate-400 leading-relaxed">
-                        Marriage practices have adapted, treating migration as a strategic asset. The family has proven resilient, evolving from a unit of production and co-residence to a unit of emotional and financial support dispersed across space.
-                    </p>
-                </div>
-                <div class="bg-slate-800 p-8 rounded-xl">
-                    <h3 class="text-lg font-bold mb-4 text-orange-400">Final Takeaways</h3>
-                    <ul class="space-y-4">
-                        <li class="flex items-start">
-                            <i class="fas fa-arrow-right mt-1 mr-3 text-slate-500"></i>
-                            <span class="text-sm text-slate-300"><strong>Structural Resilience:</strong> Joint families adapt into "functional" rather than "residential" units.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-arrow-right mt-1 mr-3 text-slate-500"></i>
-                            <span class="text-sm text-slate-300"><strong>Gender Dynamics:</strong> Migration often empowers women left behind with decision-making power, though it increases their labor burden.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-arrow-right mt-1 mr-3 text-slate-500"></i>
-                            <span class="text-sm text-slate-300"><strong>Technological Kinship:</strong> Technology is now the primary infrastructure for maintaining kinship.</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-slate-800 mt-12 pt-8 text-center text-slate-600 text-sm">
-                <p>Based on Master in Sociology Research Assignment Framework. &copy; 2023.</p>
-            </div>
+    </main>
+
+    <!-- HIDDEN FULL TEXT FOR PDF EXPORT -->
+    <div id="pdf-content" class="p-12 font-serif leading-loose">
+        <div class="text-center mb-12 border-b pb-8">
+            <h1 class="text-4xl font-bold uppercase tracking-widest">Research Report</h1>
+            <h2 class="text-2xl mt-4">Social Migration Impact on Family, Kinship and Marriage</h2>
+            <p class="mt-4 text-gray-600 italic">Assignment Submission: Master in Sociology (MSO)</p>
         </div>
-    </footer>
 
-    <!-- JavaScript Logic -->
+        <section class="mb-8">
+            <h3 class="text-xl font-bold border-b mb-4">1. Introduction & Research Objectives</h3>
+            <p>Migration serves as a primary driver of structural transformation in modern sociological landscapes. This report investigates the tripartite impact of human mobility on family units, kinship networks, and marriage practices. The primary objectives are: (a) To assess the shift from joint-residential to nuclear-functional family models; (b) To explore the role of digital technology in maintaining kinship obligations; and (c) To analyze the commodification of migration status in the matrimonial market.</p>
+        </section>
+
+        <section class="mb-8">
+            <h3 class="text-xl font-bold border-b mb-4">2. Review of Literature</h3>
+            <p><strong>Article I:</strong> Recent studies in rural Bihar highlight a 'split-household' phenomenon. Using qualitative surveys, researchers found that while residential jointness declines, functional jointness persists through remittances and collective decision-making, often placing a heavy administrative burden on 'left-behind' wives.</p>
+            <p class="mt-4"><strong>Article II:</strong> Research on the Kerala-Gulf corridor utilizes ethnographic methods to describe the 'Migrant Groom' archetype. The findings suggest that migration status is now a prerequisite for upward matrimonial mobility, often overriding traditional criteria like land ownership in the partner selection process.</p>
+        </section>
+
+        <section class="mb-8 page-break">
+            <h3 class="text-xl font-bold border-b mb-4">3. Comparative Case Studies</h3>
+            <div class="space-y-6">
+                <div class="p-4 border">
+                    <h4 class="font-bold underline mb-2">Case Study 1: Internal Labor Migration</h4>
+                    <p>Focusing on the Sharma family (Bihar to Delhi). This case illustrates the 'feminization of rural management'. The male head's absence leads to a reconfiguration of kinship where the wife manages agricultural and domestic duties, while the husband remains the primary financial provider from a distance.</p>
+                </div>
+                <div class="p-4 border">
+                    <h4 class="font-bold underline mb-2">Case Study 2: Transnational Professional Migration</h4>
+                    <p>Focusing on the Mathew family (Kerala to UAE). This case highlights 'Virtual Kinship'. Daily digital interactions preserve emotional bonds, suggesting that geographical distance does not necessarily lead to kinship atomization in the age of global connectivity.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8">
+            <h3 class="text-xl font-bold border-b mb-4">4. Summary of Findings & Conclusion</h3>
+            <p>The analysis demonstrates that migration does not lead to the total disintegration of traditional structures but rather to their adaptive reconfiguration. The family evolves from a co-residential unit to a dispersed functional network. Marriage practices increasingly capitalize on migration as a status symbol. Ultimately, kinship survives through a blend of financial remittances and digital intimacy.</p>
+        </section>
+
+        <div class="mt-20 text-right italic text-sm border-t pt-4">
+            Generated via Sociology Interactive Dashboard | Course Code: MSO
+        </div>
+    </div>
+
     <script>
-        // --- Data Storage ---
-        const litReviews = [
-            {
-                id: 1,
-                title: "The Left-Behind Elderly",
-                location: "Bihar, India",
-                method: "Qualitative Survey (n=200)",
-                finding: "Emotional Isolation",
-                desc: "Study focuses on the psychological impact on elderly parents left in rural areas. While financial health improved due to remittances, self-reported 'loneliness' scores increased by 40%."
-            },
-            {
-                id: 2,
-                title: "Gulf Wives & Matriarchy",
-                location: "Kerala, India",
-                method: "Ethnographic Case Study",
-                finding: "De-facto Female Headship",
-                desc: "Women whose husbands migrate to the Gulf often assume total control over household finances and child education, challenging traditional patriarchal norms within the household."
-            },
-            {
-                id: 3,
-                title: "Urban Slums & Kinship",
-                location: "Mumbai, India",
-                method: "Mixed Methods",
-                finding: "Kinship Clusters",
-                desc: "Migrants in urban slums recreate village kinship networks by clustering in specific neighborhoods, relying on these networks for job security and emergency loans."
-            },
-            {
-                id: 4,
-                title: "Digital Intimacy",
-                location: "Transnational (UK-India)",
-                method: "Digital Ethnography",
-                finding: "Virtual Co-presence",
-                desc: "Analyzes how Skype and WhatsApp allow for 'ambient co-presence', where families keep video calls on for hours to simulate sharing physical space."
+        // State Management for View Switching
+        function switchView(view) {
+            const interactive = document.getElementById('interactive-view');
+            const download = document.getElementById('download-view');
+            const navInt = document.getElementById('nav-interactive');
+            const navDown = document.getElementById('nav-download');
+
+            if (view === 'interactive') {
+                interactive.classList.remove('hidden');
+                download.classList.add('hidden');
+                navInt.className = "text-orange-600 border-b-2 border-orange-600 pb-1";
+                navDown.className = "text-slate-500 hover:text-orange-600 transition";
+            } else {
+                interactive.classList.add('hidden');
+                download.classList.remove('hidden');
+                navDown.className = "text-orange-600 border-b-2 border-orange-600 pb-1";
+                navInt.className = "text-slate-500 hover:text-orange-600 transition";
             }
-        ];
-
-        // --- Core Interaction Handling ---
-
-        // 1. Render Lit Review Cards
-        function renderLitCards() {
-            const grid = document.getElementById('lit-grid');
-            grid.innerHTML = litReviews.map(item => `
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition cursor-pointer group" onclick="showLitDetail(${item.id})">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs group-hover:bg-primary-clay group-hover:text-white transition">
-                            ${item.id}
-                        </div>
-                        <i class="fas fa-chevron-right text-slate-300 group-hover:text-primary-clay transition"></i>
-                    </div>
-                    <h3 class="font-bold text-slate-900 mb-2 leading-tight h-12 overflow-hidden">${item.title}</h3>
-                    <p class="text-xs text-slate-500 mb-1"><strong class="text-slate-700">Loc:</strong> ${item.location}</p>
-                    <p class="text-xs text-slate-500"><strong class="text-slate-700">Find:</strong> ${item.finding}</p>
-                </div>
-            `).join('');
         }
 
-        // 2. Lit Review Detail View Logic
-        function showLitDetail(id) {
-            const item = litReviews.find(i => i.id === id);
-            if (!item) return;
-
-            document.getElementById('lit-detail-title').innerText = item.title;
-            document.getElementById('lit-detail-loc').innerText = item.location;
-            document.getElementById('lit-detail-method').innerText = item.method;
-            document.getElementById('lit-detail-finding').innerText = item.finding;
-            document.getElementById('lit-detail-desc').innerText = item.desc;
-
-            const detailSection = document.getElementById('lit-detail');
-            detailSection.classList.remove('hidden');
-            detailSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function closeLitDetail() {
-            document.getElementById('lit-detail').classList.add('hidden');
-        }
-
-        // 3. Tab Switching Logic
-        function switchTab(tabName) {
-            // Hide all content
-            ['family', 'kinship', 'marriage'].forEach(t => {
-                document.getElementById(`content-${t}`).classList.add('hidden');
-                const btn = document.getElementById(`tab-${t}`);
-                btn.classList.remove('tab-active');
-                btn.classList.add('tab-inactive');
+        // State Management for Dashboard Tabs
+        function switchAnalysis(type) {
+            const sections = ['lit', 'cases', 'data'];
+            sections.forEach(s => {
+                document.getElementById(`sub-${s}`).classList.add('hidden');
+                document.getElementById(`btn-${s}`).className = "flex-1 py-4 text-sm font-bold text-slate-500";
             });
 
-            // Show selected
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-${tabName}`);
-            activeBtn.classList.remove('tab-inactive');
-            activeBtn.classList.add('tab-active');
+            document.getElementById(`sub-${type}`).classList.remove('hidden');
+            document.getElementById(`btn-${type}`).className = "flex-1 py-4 text-sm font-bold tab-active";
         }
 
-        // 4. Smooth Scroll
-        function scrollToSection(id) {
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        // PDF Generation Trigger
+        function generatePDF() {
+            window.print();
         }
 
-        // --- Chart Initialization (Chart.js) ---
-        function initCharts() {
-            // 1. Family Structure Chart (Bar)
-            const familyCtx = document.getElementById('familyChart').getContext('2d');
-            new Chart(familyCtx, {
+        // Initialize Chart.js
+        window.onload = function() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Joint Family', 'Nuclear Family', 'Single-Person Household'],
-                    datasets: [
-                        {
-                            label: 'Pre-Migration',
-                            data: [65, 30, 5],
-                            backgroundColor: '#cbd5e1', // slate-300
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Post-Migration',
-                            data: [25, 60, 15],
-                            backgroundColor: '#ea580c', // orange-600
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-
-            // 2. Kinship Chart (Radar/Line) - Using Bar for clarity on comparison
-            const kinshipCtx = document.getElementById('kinshipChart').getContext('2d');
-            new Chart(kinshipCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Daily Contact', 'Financial Help', 'Advice Seeking', 'Physical Care', 'Ceremonial Attendance'],
-                    datasets: [
-                        {
-                            label: 'Non-Migrant Families',
-                            data: [80, 40, 70, 90, 95],
-                            borderColor: '#cbd5e1',
-                            backgroundColor: 'rgba(203, 213, 225, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'Migrant Families',
-                            data: [90, 85, 75, 20, 40],
-                            borderColor: '#ea580c',
-                            backgroundColor: 'rgba(234, 88, 12, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#ea580c'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: { 
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.raw + '% Frequency';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            max: 100,
-                            grid: { color: '#f1f5f9' },
-                            title: { display: true, text: 'Frequency / Intensity (%)' }
-                        },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-
-            // 3. Marriage Chart (Doughnut)
-            const marriageCtx = document.getElementById('marriageChart').getContext('2d');
-            new Chart(marriageCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Economic Stability (Job/Visa)', 'Caste/Religion', 'Family Reputation', 'Education'],
+                    labels: ['Joint Residence', 'Nuclear Residence', 'Modified Extended'],
                     datasets: [{
-                        data: [45, 25, 20, 10],
-                        backgroundColor: [
-                            '#ea580c', // Primary
-                            '#fdba74', // Orange-300
-                            '#94a3b8', // Slate-400
-                            '#cbd5e1'  // Slate-300
-                        ],
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        label: 'Post-Migration Household Structure (%)',
+                        data: [15, 60, 25],
+                        backgroundColor: '#ea580c',
+                        borderRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }
-                    },
-                    cutout: '70%'
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => value + '%' }
+                        } 
+                    }
                 }
             });
-        }
-
-        // Initialize Everything on Load
-        window.addEventListener('DOMContentLoaded', () => {
-            renderLitCards();
-            initCharts();
-        });
-
+        };
     </script>
 </body>
 </html>
